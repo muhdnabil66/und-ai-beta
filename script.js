@@ -11,7 +11,6 @@ const welcomeScreen = document.getElementById('welcomeScreen');
 const themeToggle = document.getElementById('themeToggle');
 const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
-const voiceBtn = document.getElementById('voiceBtn');
 
 // Wrapper for chat stream inner content
 let chatStreamInner = document.createElement('div');
@@ -39,7 +38,7 @@ if (themeToggle) {
     };
 }
 
-// 3. Welcome Screen Smooth Removal
+// 3. Welcome Screen Removal
 window.addEventListener('load', function() {
     if (welcomeScreen) {
         setTimeout(function() {
@@ -74,18 +73,17 @@ function fillInput(text) {
     }
 }
 
-// 6. API Logic (SWITCHED TO v1 STABLE TO FIX 404)
+// 6. Gemini API Logic (v1 Stable + 1.5-Flash)
 async function askGemini(prompt) {
     if (!window.CONFIG || !window.CONFIG.GEMINI_KEY) {
-        throw new Error("Missing API Key in config.js");
+        throw new Error("Missing API Key");
     }
 
     const key = window.CONFIG.GEMINI_KEY;
-    // Using gemini-1.5-flash on the v1 (stable) endpoint
-    const model = "gemini-1.5-flash"; 
-    const fullUrl = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + key;
+    // Using v1 (stable) instead of v1beta to avoid regional 404s
+    const url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + key;
 
-    const response = await fetch(fullUrl, {
+    const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,34 +92,35 @@ async function askGemini(prompt) {
     });
 
     if (!response.ok) {
-        throw new Error("Google API Error: " + response.status);
+        const errorJson = await response.json().catch(() => ({}));
+        console.error("Google API detailed error:", errorJson);
+        throw new Error("Status " + response.status);
     }
 
     const data = await response.json();
     return data.candidates[0].content.parts[0].text;
 }
 
-// 7. Image Gen
+// 7. Image Generation (Flux Schnell)
 async function generateImage(prompt) {
     if (!window.CONFIG || !window.CONFIG.HF_TOKEN) {
         throw new Error("Missing HF Token");
     }
 
-    const hfToken = window.CONFIG.HF_TOKEN;
     const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-        headers: { "Authorization": "Bearer " + hfToken },
+        headers: { "Authorization": "Bearer " + window.CONFIG.HF_TOKEN },
         method: "POST",
         body: JSON.stringify({ inputs: prompt })
     });
 
-    if (!response.ok) throw new Error("Image API Error");
+    if (!response.ok) throw new Error("Image API rejected request");
 
     const blob = await response.blob();
     return URL.createObjectURL(blob);
 }
 
-// 8. Message UI
-function appendMessage(role, contentHTML, rawText) {
+// 8. Message UI Functions
+function appendMessage(role, contentHTML) {
     if (emptyState && emptyState.parentNode) {
         emptyState.remove();
     }
@@ -132,7 +131,7 @@ function appendMessage(role, contentHTML, rawText) {
 
     chatStreamInner.appendChild(wrapper);
 
-    setTimeout(function() {
+    setTimeout(() => {
         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     }, 50);
 
@@ -141,7 +140,7 @@ function appendMessage(role, contentHTML, rawText) {
 
 function showThinking() {
     const html = '<div class="thinking-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-    return appendMessage('ai', html, "");
+    return appendMessage('ai', html);
 }
 
 // 9. Main Action Handler
@@ -150,36 +149,36 @@ async function handleAction(type) {
     if (!text) return;
 
     userInput.value = '';
-    appendMessage('user', text, text);
+    appendMessage('user', text);
     const thinkingNode = showThinking();
 
     try {
         if (type === 'chat') {
             const res = await askGemini(text);
             thinkingNode.remove();
-            appendMessage('ai', res.replace(/\n/g, '<br>'), res);
+            appendMessage('ai', res.replace(/\n/g, '<br>'));
         } else {
             const imgUrl = await generateImage(text);
             thinkingNode.remove();
-            const imgHTML = '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">';
-            appendMessage('ai', imgHTML, "Image");
+            const imgHTML = '<div class="img-container"><img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;"><a href="' + imgUrl + '" download="ai-image.png" class="download-link" style="display:block; text-align:center; margin-top:5px; color:var(--primary-color); text-decoration:none; font-size:0.8rem;">Download Image</a></div>';
+            appendMessage('ai', imgHTML);
         }
     } catch (e) {
-        console.error(e);
+        console.error("Detailed Error Object:", e);
         thinkingNode.remove();
-        showPopup("Service Error", "Google API returned error " + e.message + ". Please verify 'Generative Language API' is enabled in your Google Cloud Console.");
+        showPopup("Connection Error", "The AI service returned: " + e.message + ". Check your Google Cloud Console to ensure the 'Generative Language API' is enabled for this project.");
     }
 }
 
 // 10. Listeners
 if (document.getElementById('sendBtn')) {
-    document.getElementById('sendBtn').onclick = function() { handleAction('chat'); };
+    document.getElementById('sendBtn').onclick = () => handleAction('chat');
 }
 if (document.getElementById('imgGenBtn')) {
-    document.getElementById('imgGenBtn').onclick = function() { handleAction('image'); };
+    document.getElementById('imgGenBtn').onclick = () => handleAction('image');
 }
 if (userInput) {
-    userInput.onkeydown = function(e) {
+    userInput.onkeydown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleAction('chat');
