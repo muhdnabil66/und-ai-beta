@@ -1,6 +1,3 @@
-// Keep this as is - do NOT paste keys here
-const GEMINI_KEY = window.CONFIG?.GEMINI_KEY || "";
-const HF_TOKEN = window.CONFIG?.HF_TOKEN || "";
 
 // Initialize Icons
 lucide.createIcons();
