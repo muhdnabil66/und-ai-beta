@@ -34,7 +34,7 @@ themeToggle.onclick = () => {
 // 3. Welcome Screen Smooth Removal
 window.onload = () => {
     setTimeout(() => {
-        welcomeScreen.classList.add('hidden');
+        if (welcomeScreen) welcomeScreen.classList.add('hidden');
     }, 2000); // 2 second showcase
 };
 
@@ -65,7 +65,7 @@ function showPopup(title, message, onConfirm = null, showCancel = false) {
 // Clear Chat Action
 function clearChat() {
     chatStreamInner.innerHTML = '';
-    if(!document.getElementById('emptyState')) {
+    if(!document.getElementById('emptyState') && emptyState) {
         chatBox.insertBefore(emptyState, chatBox.firstChild);
     }
 }
@@ -120,9 +120,14 @@ userInput.addEventListener('input', function() {
     this.style.height = (this.scrollHeight) + 'px';
 });
 
-// 7. API Logic (Gemini 2.0 Flash)
+// 7. API Logic (Gemini 1.5 Flash - Updated Reference)
 async function askGemini(prompt) {
-    const url = https://www.google.com/search?q=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent%3Fkey%3D${window.CONFIG.GEMINI_KEY};
+    // We reference window.CONFIG because that is where GitHub Actions injects the key
+    const apiKey = window.CONFIG?.GEMINI_KEY;
+    if (!apiKey) throw new Error("Missing API Key");
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
     const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -135,10 +140,13 @@ async function askGemini(prompt) {
     return data.candidates[0].content.parts[0].text;
 }
 
-// 8. Image Gen (Hugging Face)
+// 8. Image Gen (Hugging Face - Updated Reference)
 async function generateImage(prompt) {
+    const hfToken = window.CONFIG?.HF_TOKEN;
+    if (!hfToken) throw new Error("Missing HF Token");
+
     const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-        headers: { Authorization: `Bearer ${HF_TOKEN}` },
+        headers: { Authorization: `Bearer ${hfToken}` },
         method: "POST",
         body: JSON.stringify({ inputs: prompt }),
     });
@@ -158,7 +166,6 @@ function appendMessage(role, contentHTML, rawText = "") {
     const wrapper = document.createElement('div');
     wrapper.className = `message-wrapper ${role}-msg`;
     
-    // Structure with Copy Button
     wrapper.innerHTML = `
         <div class="message-content">
             ${contentHTML}
@@ -173,7 +180,6 @@ function appendMessage(role, contentHTML, rawText = "") {
     chatStreamInner.appendChild(wrapper);
     lucide.createIcons();
 
-    // Copy Event
     const copyBtn = wrapper.querySelector('.copy-btn');
     copyBtn.onclick = () => {
         const textToCopy = rawText || wrapper.querySelector('.message-content').innerText;
@@ -187,7 +193,6 @@ function appendMessage(role, contentHTML, rawText = "") {
         });
     };
 
-    // Scroll to bottom
     setTimeout(() => {
         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     }, 50);
@@ -211,35 +216,29 @@ async function handleAction(type) {
     const text = userInput.value.trim();
     if (!text) return;
 
-    // Reset Input
     userInput.value = '';
     userInput.style.height = 'auto';
 
-    // User Message
     appendMessage('user', text, text);
-    
-    // AI Thinking State
     const thinkingNode = showThinking();
 
     try {
         if (type === 'chat') {
             const res = await askGemini(text);
             thinkingNode.remove();
-            
-            // Format basic line breaks
             const formattedRes = res.replace(/\n/g, '<br>');
             appendMessage('ai', formattedRes, res);
             
         } else if (type === 'image') {
             const imgUrl = await generateImage(text);
             thinkingNode.remove();
-            
-            const imgHTML = `<img src="${imgUrl}" alt="Generated Image">`;
-            appendMessage('ai', imgHTML, "Image Generated via Hugging Face API");
+            const imgHTML = `<img src="${imgUrl}" alt="Generated Image" style="width:100%; border-radius:12px; margin-top:10px;">`;
+            appendMessage('ai', imgHTML, "Image Generated");
         }
     } catch (e) {
+        console.error(e);
         thinkingNode.remove();
-        showPopup("Service Error", "There was an issue connecting to the AI. Please check your API keys or internet connection.", null, false);
+        showPopup("Service Error", "There was an issue connecting to the AI. Please verify your API keys are active in Google Cloud and Hugging Face.");
     }
 }
 
