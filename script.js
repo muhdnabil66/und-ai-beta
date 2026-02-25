@@ -122,7 +122,7 @@ userInput.addEventListener('input', function() {
 
 // 7. API Logic (Gemini 2.0 Flash)
 async function askGemini(prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const url = https://www.google.com/search?q=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent%3Fkey%3D${window.CONFIG.GEMINI_KEY};
     const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
