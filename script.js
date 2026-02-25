@@ -65,7 +65,7 @@ function showPopup(title, message) {
     };
 }
 
-// 5. Missing Function Fix (For Suggestion Buttons)
+// 5. Suggestion Button Logic
 function fillInput(text) {
     if (userInput) {
         userInput.value = text;
@@ -74,17 +74,16 @@ function fillInput(text) {
     }
 }
 
-// 6. API Logic (Stable URL to fix 404)
+// 6. API Logic (SWITCHED TO v1 STABLE TO FIX 404)
 async function askGemini(prompt) {
     if (!window.CONFIG || !window.CONFIG.GEMINI_KEY) {
         throw new Error("Missing API Key in config.js");
     }
 
     const key = window.CONFIG.GEMINI_KEY;
-    // Standard stable model name
-    const model = "gemini-1.5-flash";
-    const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
-    const fullUrl = baseUrl + model + ":generateContent?key=" + key;
+    // Using gemini-1.5-flash on the v1 (stable) endpoint
+    const model = "gemini-1.5-flash"; 
+    const fullUrl = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + key;
 
     const response = await fetch(fullUrl, {
         method: "POST",
@@ -95,14 +94,14 @@ async function askGemini(prompt) {
     });
 
     if (!response.ok) {
-        throw new Error("Google API rejected the request. Status: " + response.status);
+        throw new Error("Google API Error: " + response.status);
     }
 
     const data = await response.json();
     return data.candidates[0].content.parts[0].text;
 }
 
-// 7. Image Gen (Hugging Face)
+// 7. Image Gen
 async function generateImage(prompt) {
     if (!window.CONFIG || !window.CONFIG.HF_TOKEN) {
         throw new Error("Missing HF Token");
@@ -121,7 +120,7 @@ async function generateImage(prompt) {
     return URL.createObjectURL(blob);
 }
 
-// 8. UI Messaging
+// 8. Message UI
 function appendMessage(role, contentHTML, rawText) {
     if (emptyState && emptyState.parentNode) {
         emptyState.remove();
@@ -145,7 +144,7 @@ function showThinking() {
     return appendMessage('ai', html, "");
 }
 
-// 9. Handle Action
+// 9. Main Action Handler
 async function handleAction(type) {
     const text = userInput.value.trim();
     if (!text) return;
@@ -162,22 +161,17 @@ async function handleAction(type) {
         } else {
             const imgUrl = await generateImage(text);
             thinkingNode.remove();
-            
-            // Image with Download Link
-            const imgHTML = '<div class="generated-image-container">' +
-                            '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">' +
-                            '<a href="' + imgUrl + '" download="generated-image.png" class="download-link">Download Image</a>' +
-                            '</div>';
+            const imgHTML = '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">';
             appendMessage('ai', imgHTML, "Image");
         }
     } catch (e) {
         console.error(e);
         thinkingNode.remove();
-        showPopup("Service Error", "The AI rejected the request (Status 404/403). Please ensure 'Generative Language API' is enabled in your Google Cloud Console project.");
+        showPopup("Service Error", "Google API returned error " + e.message + ". Please verify 'Generative Language API' is enabled in your Google Cloud Console.");
     }
 }
 
-// 10. Event Listeners
+// 10. Listeners
 if (document.getElementById('sendBtn')) {
     document.getElementById('sendBtn').onclick = function() { handleAction('chat'); };
 }
