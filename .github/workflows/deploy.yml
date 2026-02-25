@@ -1,0 +1,23 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Config File from Secrets
+        run: |
+          echo "window.CONFIG = {
+            GEMINI_KEY: '${{ secrets.GEMINI_KEY }}',
+            HF_TOKEN: '${{ secrets.HF_TOKEN }}'
+          };" > config.js
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: . # Deploys the root folder
+          branch: gh-pages # Creates a special branch for the live site
