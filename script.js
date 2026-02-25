@@ -74,15 +74,15 @@ function fillInput(text) {
     }
 }
 
-// 6. API Logic (Fixed Model Name for 404 Error)
+// 6. API Logic (Stable URL to fix 404)
 async function askGemini(prompt) {
     if (!window.CONFIG || !window.CONFIG.GEMINI_KEY) {
         throw new Error("Missing API Key in config.js");
     }
 
     const key = window.CONFIG.GEMINI_KEY;
-    // Using -latest helps avoid 404 versioning issues
-    const model = "gemini-1.5-flash-latest";
+    // Standard stable model name
+    const model = "gemini-1.5-flash";
     const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
     const fullUrl = baseUrl + model + ":generateContent?key=" + key;
 
@@ -102,7 +102,7 @@ async function askGemini(prompt) {
     return data.candidates[0].content.parts[0].text;
 }
 
-// 7. Image Gen
+// 7. Image Gen (Hugging Face)
 async function generateImage(prompt) {
     if (!window.CONFIG || !window.CONFIG.HF_TOKEN) {
         throw new Error("Missing HF Token");
@@ -162,13 +162,18 @@ async function handleAction(type) {
         } else {
             const imgUrl = await generateImage(text);
             thinkingNode.remove();
-            const imgHTML = '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">';
+            
+            // Image with Download Link
+            const imgHTML = '<div class="generated-image-container">' +
+                            '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">' +
+                            '<a href="' + imgUrl + '" download="generated-image.png" class="download-link">Download Image</a>' +
+                            '</div>';
             appendMessage('ai', imgHTML, "Image");
         }
     } catch (e) {
         console.error(e);
         thinkingNode.remove();
-        showPopup("Service Error", "The AI is currently unavailable. Please check your Google Cloud Console for API status.");
+        showPopup("Service Error", "The AI rejected the request (Status 404/403). Please ensure 'Generative Language API' is enabled in your Google Cloud Console project.");
     }
 }
 
