@@ -73,15 +73,15 @@ function fillInput(text) {
     }
 }
 
-// 6. Gemini API Logic (v1 Stable Path)
+// 6. Gemini API Logic (v1beta for 1.5-Flash Support)
 async function askGemini(prompt) {
     const apiKey = window.CONFIG?.GEMINI_KEY;
     if (!apiKey || apiKey.includes('actual_key')) {
-        throw new Error("API Key is missing or not set correctly in config.js");
+        throw new Error("API Key is missing from config.js");
     }
 
-    // Stable URL to fix 404 issues
-    const url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+    // UPDATED URL: Using v1beta and the correct model path to fix the 404 error
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
 
     const response = await fetch(url, {
         method: "POST",
@@ -93,8 +93,9 @@ async function askGemini(prompt) {
 
     if (!response.ok) {
         const errorJson = await response.json().catch(() => ({}));
-        console.error("Detailed Google API Error:", errorJson);
-        throw new Error("Status " + response.status + ": " + (errorJson.error?.message || "Check Console"));
+        console.error("Google API Detailed Error:", errorJson);
+        // Display the specific message from Google if available
+        throw new Error(errorJson.error?.message || "Status " + response.status);
     }
 
     const data = await response.json();
