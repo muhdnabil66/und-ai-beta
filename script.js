@@ -1,188 +1,119 @@
 // Initialize Icons
-if (window.lucide) {
-    lucide.createIcons();
-}
+if (window.lucide) { lucide.createIcons(); }
 
-// DOM Elements
-const sidebar = document.getElementById('sidebar');
-const menuBtn = document.getElementById('menuBtn');
 const userInput = document.getElementById('userInput');
-const welcomeScreen = document.getElementById('welcomeScreen');
-const themeToggle = document.getElementById('themeToggle');
 const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
-const voiceBtn = document.getElementById('voiceBtn');
 
-// Wrapper for chat stream inner content
 let chatStreamInner = document.createElement('div');
 chatStreamInner.className = 'chat-stream-inner';
-if (chatBox) {
-    chatBox.appendChild(chatStreamInner);
-}
+if (chatBox) { chatBox.appendChild(chatStreamInner); }
 
-// 1. Sidebar Toggle
-if (menuBtn && sidebar) {
-    menuBtn.onclick = function() {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('active');
-        } else {
-            sidebar.classList.toggle('collapsed');
-        }
-    };
-}
-
-// 2. Theme Toggle
-if (themeToggle) {
-    themeToggle.onclick = function() {
-        document.body.classList.toggle('light-mode');
-        document.body.classList.toggle('dark-mode');
-    };
-}
-
-// 3. Welcome Screen Smooth Removal
-window.addEventListener('load', function() {
-    if (welcomeScreen) {
-        setTimeout(function() {
-            welcomeScreen.classList.add('hidden');
-        }, 2000);
-    }
-});
-
-// 4. Custom Popup Logic
-function showPopup(title, message) {
-    const modal = document.getElementById('customModal');
-    if (!modal) {
-        alert(title + ": " + message);
-        return;
-    }
-    document.getElementById('modalTitle').innerText = title;
-    document.getElementById('modalMessage').innerText = message;
-    modal.classList.remove('hidden');
+// --- CHAT LOGIC (OPENROUTER) ---
+async function askAI(prompt) {
+    // The robot swaps this fake text for your REAL key only on the live site
+    const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
     
-    const confirmBtn = document.getElementById('modalConfirm');
-    confirmBtn.onclick = function() {
-        modal.classList.add('hidden');
-    };
-}
-
-// 5. Suggestion Button Logic
-function fillInput(text) {
-    if (userInput) {
-        userInput.value = text;
-        userInput.focus();
-        handleAction('chat');
-    }
-}
-
-// 6. API Logic (SWITCHED TO v1 STABLE TO FIX 404)
-async function askGemini(prompt) {
-    if (!window.CONFIG || !window.CONFIG.GEMINI_KEY) {
-        throw new Error("Missing API Key in config.js");
+    if (apiKey.includes("INSERT_OPENROUTER")) {
+        throw new Error("API Key not injected yet. Please wait 1 minute for the build to finish.");
     }
 
-    const key = window.CONFIG.GEMINI_KEY;
-    // Using gemini-1.5-flash on the v1 (stable) endpoint
-    const model = "gemini-1.5-flash"; 
-    const fullUrl = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + key;
-
-    const response = await fetch(fullUrl, {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            "model": "google/gemini-2.0-flash-exp:free",
+            "messages": [{ "role": "user", "content": prompt }]
         })
     });
 
     if (!response.ok) {
-        throw new Error("Google API Error: " + response.status);
+        const err = await response.json();
+        throw new Error(err.error?.message || "Connection Error");
     }
 
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    return data.choices[0].message.content;
 }
 
-// 7. Image Gen
+// --- IMAGE LOGIC (HUGGING FACE) ---
 async function generateImage(prompt) {
-    if (!window.CONFIG || !window.CONFIG.HF_TOKEN) {
-        throw new Error("Missing HF Token");
+    // The robot swaps this fake text for your REAL token only on the live site
+    const hfToken = "INSERT_HF_TOKEN_HERE"; 
+
+    if (hfToken.includes("INSERT_HF")) {
+        throw new Error("HF Token not injected.");
     }
 
-    const hfToken = window.CONFIG.HF_TOKEN;
     const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-        headers: { "Authorization": "Bearer " + hfToken },
+        headers: { "Authorization": `Bearer ${hfToken}` },
         method: "POST",
         body: JSON.stringify({ inputs: prompt })
     });
 
-    if (!response.ok) throw new Error("Image API Error");
+    if (!response.ok) throw new Error("Hugging Face API rejected the token or is busy.");
 
     const blob = await response.blob();
     return URL.createObjectURL(blob);
 }
 
-// 8. Message UI
-function appendMessage(role, contentHTML, rawText) {
-    if (emptyState && emptyState.parentNode) {
-        emptyState.remove();
-    }
-
-    const wrapper = document.createElement('div');
-    wrapper.className = "message-wrapper " + role + "-msg";
-    wrapper.innerHTML = '<div class="message-content">' + contentHTML + '</div>';
-
-    chatStreamInner.appendChild(wrapper);
-
-    setTimeout(function() {
-        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-    }, 50);
-
-    return wrapper;
+// UI Message Function
+function appendMessage(role, content) {
+    if (emptyState) emptyState.remove();
+    const msg = document.createElement('div');
+    msg.className = `message-wrapper ${role}-msg`;
+    msg.innerHTML = `<div class="message-content">${content.replace(/\n/g, '<br>')}</div>`;
+    chatStreamInner.appendChild(msg);
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    return msg;
 }
 
-function showThinking() {
-    const html = '<div class="thinking-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-    return appendMessage('ai', html, "");
-}
-
-// 9. Main Action Handler
+// --- MAIN ACTION HANDLER ---
 async function handleAction(type) {
     const text = userInput.value.trim();
     if (!text) return;
 
     userInput.value = '';
-    appendMessage('user', text, text);
-    const thinkingNode = showThinking();
+    appendMessage('user', text);
+    
+    const statusMsg = type === 'chat' ? 'Thinking...' : 'Generating image...';
+    const thinking = appendMessage('ai', statusMsg);
 
     try {
         if (type === 'chat') {
-            const res = await askGemini(text);
-            thinkingNode.remove();
-            appendMessage('ai', res.replace(/\n/g, '<br>'), res);
+            const aiRes = await askAI(text);
+            thinking.remove();
+            appendMessage('ai', aiRes);
         } else {
             const imgUrl = await generateImage(text);
-            thinkingNode.remove();
-            const imgHTML = '<img src="' + imgUrl + '" style="width:100%; border-radius:12px; margin-top:10px;">';
-            appendMessage('ai', imgHTML, "Image");
+            thinking.remove();
+            const imgHTML = `<div class="img-result">
+                                <img src="${imgUrl}" style="width:100%; border-radius:12px; margin-top:10px; border: 1px solid #444;">
+                                <a href="${imgUrl}" download="ai-image.png" style="display:block; text-align:center; color:#4a90e2; margin-top:8px; text-decoration:none; font-size:0.9rem;">⬇ Download Image</a>
+                             </div>`;
+            appendMessage('ai', imgHTML);
         }
     } catch (e) {
-        console.error(e);
-        thinkingNode.remove();
-        showPopup("Service Error", "Google API returned error " + e.message + ". Please verify 'Generative Language API' is enabled in your Google Cloud Console.");
+        thinking.innerHTML = `<div style="color:#ff6b6b; padding:10px; border:1px solid #ff6b6b; border-radius:8px;"><strong>Error:</strong> ${e.message}</div>`;
     }
 }
 
-// 10. Listeners
-if (document.getElementById('sendBtn')) {
-    document.getElementById('sendBtn').onclick = function() { handleAction('chat'); };
-}
-if (document.getElementById('imgGenBtn')) {
-    document.getElementById('imgGenBtn').onclick = function() { handleAction('image'); };
-}
-if (userInput) {
-    userInput.onkeydown = function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleAction('chat');
-        }
-    };
-}
+document.getElementById('sendBtn')?.addEventListener('click', () => handleAction('chat'));
+document.getElementById('imgGenBtn')?.addEventListener('click', () => handleAction('image'));
+
+userInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleAction('chat');
+    }
+});
+
+document.getElementById('themeToggle')?.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
+document.getElementById('menuBtn')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
+
+window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('welcomeScreen')?.classList.add('hidden'), 2000);
+});

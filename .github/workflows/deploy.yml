@@ -11,15 +11,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Create Config File from Secrets
+      - name: Inject Secrets
+        env:
+          G_KEY: ${{ secrets.GEMINI_KEY }}
+          H_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "window.CONFIG = {
-            GEMINI_KEY: '${{ secrets.GEMINI_KEY }}',
-            HF_TOKEN: '${{ secrets.HF_TOKEN }}'
-          };" > config.js
+          # This swaps the placeholders for real keys during build time ONLY
+          sed -i "s|INSERT_OPENROUTER_KEY_HERE|$G_KEY|g" script.js
+          sed -i "s|INSERT_HF_TOKEN_HERE|$H_TOKEN|g" script.js
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: . # This tells GitHub to copy your index.html and script.js
-          branch: gh-pages # This is the branch that makes the site live
+          folder: .
+          branch: gh-pages
