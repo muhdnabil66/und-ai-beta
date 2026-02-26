@@ -1,25 +1,21 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
     branches: [main]
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Inject Secrets
         env:
           G_KEY: ${{ secrets.GEMINI_KEY }}
           H_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # This swaps the placeholders for real keys during build time ONLY
+          # This swaps placeholders for real keys only during deployment
           sed -i "s|INSERT_OPENROUTER_KEY_HERE|$G_KEY|g" script.js
           sed -i "s|INSERT_HF_TOKEN_HERE|$H_TOKEN|g" script.js
-
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
