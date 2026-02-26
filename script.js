@@ -11,12 +11,11 @@ if (chatBox) { chatBox.appendChild(chatStreamInner); }
 
 // --- CHAT LOGIC (OPENROUTER) ---
 async function askAI(prompt) {
-    // LEAVE THESE PLACEHOLDERS EXACTLY AS THEY ARE.
-    // The GitHub Action will swap them for real keys ONLY on the live site.
+    // The robot swaps this fake text for your REAL key only on the live site
     const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
-        throw new Error("API Key was not injected. Please wait for GitHub Actions to finish.");
+        throw new Error("API Key not injected yet. Please wait 1 minute for the build to finish.");
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -42,6 +41,7 @@ async function askAI(prompt) {
 
 // --- IMAGE LOGIC (HUGGING FACE) ---
 async function generateImage(prompt) {
+    // The robot swaps this fake text for your REAL token only on the live site
     const hfToken = "INSERT_HF_TOKEN_HERE"; 
 
     if (hfToken.includes("INSERT_HF")) {
@@ -54,7 +54,7 @@ async function generateImage(prompt) {
         body: JSON.stringify({ inputs: prompt })
     });
 
-    if (!response.ok) throw new Error("Image API is busy or offline");
+    if (!response.ok) throw new Error("Hugging Face API rejected the token or is busy.");
 
     const blob = await response.blob();
     return URL.createObjectURL(blob);
