@@ -11,12 +11,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Inject Keys into Script
+      - name: Inject Secrets
         env:
           G_KEY: ${{ secrets.GEMINI_KEY }}
           H_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # This replaces the fake text in script.js with your real secrets
+          # The robot swaps the placeholders for real keys
           sed -i "s|INSERT_OPENROUTER_KEY_HERE|$G_KEY|g" script.js
           sed -i "s|INSERT_HF_TOKEN_HERE|$H_TOKEN|g" script.js
 
