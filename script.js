@@ -61,7 +61,7 @@ function showPopup(title, message, onConfirm = null) {
 
 // 5. AI LOGIC
 async function askAI(prompt) {
-    const apiKey = "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"; 
+    const apiKey = "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"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
         throw new Error("Security Error: API Key missing.");
