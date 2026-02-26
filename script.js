@@ -8,7 +8,6 @@ window.addEventListener('load', () => {
 
 if (window.lucide) { lucide.createIcons(); }
 
-// 2. ELEMENT SELECTION
 const sidebar = document.getElementById('sidebar');
 const menuBtn = document.getElementById('menuBtn');
 const userInput = document.getElementById('userInput');
@@ -35,6 +34,7 @@ menuBtn?.addEventListener('click', (e) => {
     sidebar?.classList.toggle('collapsed');
 });
 
+// Close sidebar on mobile when clicking outside
 document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 && sidebar?.classList.contains('active')) {
         if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
@@ -59,19 +59,21 @@ function showPopup(title, message, onConfirm = null) {
     };
 }
 
-// 5. AI LOGIC
+// 5. AI LOGIC (FIXED HEADERS)
 async function askAI(prompt) {
-    const apiKey = "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"; 
+    const apiKey = "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"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
-        throw new Error("Security Error: API Key missing.");
+        throw new Error("API Key missing.");
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "HTTP-Referer": window.location.origin,
+            "X-Title": "UND AI"
         },
         body: JSON.stringify({
             "model": "google/gemini-2.0-flash-lite:free",
@@ -110,31 +112,22 @@ async function handleChat() {
     }
 }
 
-// Global autoAsk for suggestions
 window.autoAsk = function(text) {
     userInput.value = text;
     handleChat();
 }
 
-// 7. EVENT LISTENERS
 document.getElementById('sendBtn')?.addEventListener('click', handleChat);
 document.getElementById('newChatBtn')?.addEventListener('click', () => location.reload());
-
 document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
-    showPopup('Clear History', 'Delete all messages in this session?', () => location.reload());
+    showPopup('Clear History', 'Delete all messages?', () => location.reload());
 });
-
 document.getElementById('settingsBtn')?.addEventListener('click', () => {
     showPopup('Settings', 'Settings configuration is coming soon.');
 });
-
 document.getElementById('contactBtn')?.addEventListener('click', () => {
     window.location.href = 'contact.html';
 });
-
-document.getElementById('imgGenBtn')?.addEventListener('click', () => showPopup('Image Gen', 'Image generation optimization in progress.'));
-document.getElementById('voiceBtn')?.addEventListener('click', () => showPopup('Voice', 'Voice input coming soon.'));
-document.getElementById('attachBtn')?.addEventListener('click', () => showPopup('Attach', 'File attachment coming soon.'));
 
 userInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
