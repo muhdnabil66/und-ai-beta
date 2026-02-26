@@ -1,6 +1,18 @@
-// Initialize Icons
+// 1. IMMEDIATE LOADING FIX: Force hide welcome screen after 2 seconds
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const welcome = document.getElementById('welcomeScreen');
+        if (welcome) {
+            welcome.classList.add('hidden');
+            console.log("Welcome screen hidden");
+        }
+    }, 2000); // Matches your index.html timing
+});
+
+// 2. INITIALIZE ICONS
 if (window.lucide) { lucide.createIcons(); }
 
+// 3. SELECT ELEMENTS
 const body = document.body;
 const themeToggle = document.getElementById('themeToggle');
 const menuBtn = document.getElementById('menuBtn');
@@ -10,19 +22,27 @@ const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
 const modal = document.getElementById('customModal');
 
-// --- THEME TOGGLE ---
-themeToggle.addEventListener('click', () => {
+// Create a container for messages if it doesn't exist
+let chatStreamInner = document.querySelector('.chat-stream-inner');
+if (!chatStreamInner && chatBox) {
+    chatStreamInner = document.createElement('div');
+    chatStreamInner.className = 'chat-stream-inner';
+    chatBox.appendChild(chatStreamInner);
+}
+
+// 4. THEME & SIDEBAR TOGGLES
+themeToggle?.addEventListener('click', () => {
     body.classList.toggle('dark-mode');
-    body.classList.toggle('light-mode');
+    body.classList.toggle('light-mode'); // Supports light-mode CSS variables
 });
 
-// --- SIDEBAR TOGGLE ---
-menuBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
+menuBtn?.addEventListener('click', () => {
+    sidebar?.classList.toggle('collapsed'); // Controls width/visibility
 });
 
-// --- POPUP SYSTEM ---
+// 5. POPUP SYSTEM
 function showPopup(title, message, onConfirm = null) {
+    if (!modal) return;
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalMessage').innerText = message;
     modal.classList.remove('hidden');
@@ -36,39 +56,9 @@ function showPopup(title, message, onConfirm = null) {
     };
 }
 
-// --- BUTTON ACTIONS ---
-document.getElementById('settingsBtn').addEventListener('click', () => {
-    showPopup('Settings', 'Settings menu is coming in a future update.');
-});
-
-document.getElementById('contactBtn').addEventListener('click', () => {
-    window.location.href = 'contact.html';
-});
-
-document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-    showPopup('Clear History', 'Are you sure you want to delete all chats?', () => {
-        document.getElementById('chatStreamInner').innerHTML = '';
-        location.reload(); // Simple way to reset state
-    });
-});
-
-document.getElementById('newChatBtn').addEventListener('click', () => {
-    location.reload();
-});
-
-// --- PLACEHOLDER FEATURES ---
-document.getElementById('voiceBtn').addEventListener('click', () => {
-    showPopup('Voice Input', 'Microphone access is being optimized for your browser.');
-});
-
-document.getElementById('attachBtn').addEventListener('click', () => {
-    showPopup('File Upload', 'File analysis feature is coming soon.');
-});
-
-// --- CHAT & API LOGIC ---
+// 6. CHAT & IMAGE LOGIC
 async function askAI(prompt) {
-    // IMPORTANT: Use GitHub Secrets to replace this string during deployment
-    const apiKey = "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"; 
+    const apiKey = "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"; // Swapped by GitHub Action
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
         throw new Error("Security Error: API Key missing. Please check deployment settings.");
@@ -90,35 +80,75 @@ async function askAI(prompt) {
     return data.choices[0].message.content;
 }
 
-// Simple Helper for suggestions
-function fillInput(text) {
-    userInput.value = text;
+// Placeholder Image Logic (Hugging Face)
+async function generateImage(prompt) {
+    const hfToken = "INSERT_HF_TOKEN_HERE"; 
+    if (hfToken.includes("INSERT_HF")) throw new Error("Image API Key missing.");
+
+    const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
+        headers: { "Authorization": `Bearer ${hfToken}` },
+        method: "POST",
+        body: JSON.stringify({ inputs: prompt })
+    });
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
 }
 
-// Handle Send
-async function handleChat() {
+// 7. MESSAGE RENDERING
+function appendMessage(role, content) {
+    if (emptyState) emptyState.style.display = 'none';
+    const msg = document.createElement('div');
+    msg.className = `message-wrapper ${role}-msg`;
+    msg.innerHTML = `<div class="message-content">${content.replace(/\n/g, '<br>')}</div>`;
+    chatStreamInner.appendChild(msg);
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    return msg;
+}
+
+// 8. ACTION HANDLERS
+async function handleAction(type) {
     const text = userInput.value.trim();
     if (!text) return;
 
-    if (emptyState) emptyState.style.display = 'none';
-    
-    // Add user message to UI (Simplified for brevity)
-    const userDiv = document.createElement('div');
-    userDiv.className = 'message-wrapper user-msg';
-    userDiv.innerHTML = `<div class="message-content">${text}</div>`;
-    chatBox.appendChild(userDiv);
-
     userInput.value = '';
+    appendMessage('user', text);
+    const thinking = appendMessage('ai', type === 'chat' ? 'Thinking...' : 'Generating image...');
 
     try {
-        const aiRes = await askAI(text);
-        const aiDiv = document.createElement('div');
-        aiDiv.className = 'message-wrapper ai-msg';
-        aiDiv.innerHTML = `<div class="message-content">${aiRes}</div>`;
-        chatBox.appendChild(aiDiv);
+        if (type === 'chat') {
+            const aiRes = await askAI(text);
+            thinking.remove();
+            appendMessage('ai', aiRes);
+        } else {
+            const imgUrl = await generateImage(text);
+            thinking.remove();
+            appendMessage('ai', `<img src="${imgUrl}" style="width:100%; border-radius:12px;">`);
+        }
     } catch (e) {
-        showPopup('Error', e.message);
+        thinking.innerHTML = `<div style="color:red;">Error: ${e.message}</div>`;
     }
 }
 
-document.getElementById('sendBtn').addEventListener('click', handleChat);
+// 9. EVENT LISTENERS
+document.getElementById('sendBtn')?.addEventListener('click', () => handleAction('chat'));
+document.getElementById('imgGenBtn')?.addEventListener('click', () => handleAction('image'));
+
+document.getElementById('settingsBtn')?.addEventListener('click', () => {
+    showPopup('Settings', 'Settings menu will be updated in the future.');
+});
+
+document.getElementById('voiceBtn')?.addEventListener('click', () => {
+    showPopup('Voice', 'Voice feature will be updated in the future.');
+});
+
+// Sidebar functionality
+function newChat() { location.reload(); }
+function clearChat() { 
+    chatStreamInner.innerHTML = '';
+    location.reload();
+}
+
+// Suggestions helper
+function fillInput(text) {
+    if (userInput) userInput.value = text;
+}
