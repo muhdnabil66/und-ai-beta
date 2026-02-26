@@ -1,4 +1,4 @@
-// 1. LOADING OVERLAY - Force hide after 2 seconds
+// 1. LOADING OVERLAY
 window.addEventListener('load', () => {
     setTimeout(() => {
         const welcome = document.getElementById('welcomeScreen');
@@ -23,20 +23,18 @@ if (!chatStreamInner && chatBox) {
     chatBox.appendChild(chatStreamInner);
 }
 
-// 3. THEME & MOBILE HAMBURGER FIX
+// 3. THEME & MOBILE TOGGLE
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     document.body.classList.toggle('light-mode');
 });
 
-// Fix: Toggle both 'collapsed' (Desktop) and 'active' (Mobile)
 menuBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
-    sidebar?.classList.toggle('collapsed');
     sidebar?.classList.toggle('active');
+    sidebar?.classList.toggle('collapsed');
 });
 
-// Close mobile sidebar when clicking outside
 document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 && sidebar?.classList.contains('active')) {
         if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
@@ -45,7 +43,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// 4. POPUP SYSTEM (For Reminders/Settings/Errors)
+// 4. MODAL SYSTEM
 function showPopup(title, message, onConfirm = null) {
     if (!modal) return;
     document.getElementById('modalTitle').innerText = title;
@@ -61,13 +59,12 @@ function showPopup(title, message, onConfirm = null) {
     };
 }
 
-// 5. IMPROVED AI LOGIC
+// 5. AI LOGIC
 async function askAI(prompt) {
-    // IMPORTANT: The GitHub Action replaces this placeholder automatically
     const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
-        throw new Error("Security Error: API Key missing. Please check GitHub Secrets.");
+        throw new Error("Security Error: API Key missing.");
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -77,17 +74,13 @@ async function askAI(prompt) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            "model": "google/gemini-2.0-flash-lite:free", // Use 'lite' for better reliability
+            "model": "google/gemini-2.0-flash-lite:free",
             "messages": [{ "role": "user", "content": prompt }]
         })
     });
 
     const data = await response.json();
-    
-    if (!response.ok) {
-        throw new Error(data.error?.message || "API request failed.");
-    }
-
+    if (!response.ok) throw new Error(data.error?.message || "API request failed.");
     return data.choices[0].message.content;
 }
 
@@ -105,56 +98,43 @@ function appendMessage(role, content) {
 async function handleChat() {
     const text = userInput.value.trim();
     if (!text) return;
-
     userInput.value = '';
     appendMessage('user', text);
     const thinking = appendMessage('ai', 'Thinking...');
-
     try {
         const aiRes = await askAI(text);
         thinking.remove();
         appendMessage('ai', aiRes);
     } catch (e) {
-        thinking.innerHTML = `<div style="color:#ff6b6b;"><strong>Error:</strong> ${e.message}</div>`;
-        showPopup('System Error', e.message); // Added popup for errors
+        thinking.innerHTML = `<div style="color:#ff6b6b;">Error: ${e.message}</div>`;
     }
 }
 
-// 7. SIDEBAR & TOOLBAR ACTIONS
-function autoAsk(text) {
+// Global autoAsk for suggestions
+window.autoAsk = function(text) {
     userInput.value = text;
     handleChat();
 }
 
+// 7. EVENT LISTENERS
 document.getElementById('sendBtn')?.addEventListener('click', handleChat);
 document.getElementById('newChatBtn')?.addEventListener('click', () => location.reload());
 
 document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
-    showPopup('Clear History', 'Are you sure you want to clear this session?', () => {
-        location.reload();
-    });
+    showPopup('Clear History', 'Delete all messages in this session?', () => location.reload());
 });
 
 document.getElementById('settingsBtn')?.addEventListener('click', () => {
-    showPopup('Settings', 'Settings will be updated in the future.');
+    showPopup('Settings', 'Settings configuration is coming soon.');
 });
 
 document.getElementById('contactBtn')?.addEventListener('click', () => {
     window.location.href = 'contact.html';
 });
 
-// Feature Placeholders
-document.getElementById('imgGenBtn')?.addEventListener('click', () => {
-    showPopup('Image Generator', 'Image generation is currently being optimized.');
-});
-
-document.getElementById('voiceBtn')?.addEventListener('click', () => {
-    showPopup('Voice Input', 'Voice features will be updated in the future.');
-});
-
-document.getElementById('attachBtn')?.addEventListener('click', () => {
-    showPopup('File Attachment', 'File analysis will be available in the future.');
-});
+document.getElementById('imgGenBtn')?.addEventListener('click', () => showPopup('Image Gen', 'Image generation optimization in progress.'));
+document.getElementById('voiceBtn')?.addEventListener('click', () => showPopup('Voice', 'Voice input coming soon.'));
+document.getElementById('attachBtn')?.addEventListener('click', () => showPopup('Attach', 'File attachment coming soon.'));
 
 userInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
