@@ -179,26 +179,26 @@ textarea::placeholder { color: var(--text-muted); }
 .disclaimer { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; max-width: 600px; line-height: 1.4; }
 
 /* ================= MOBILE ================= */
-/* Add to your existing style.css */
-
-/* Mobile Sidebar Activation */
+/* Mobile Sidebar Support */
 @media (max-width: 768px) {
-    .sidebar { 
-        position: fixed; 
-        left: -260px; 
-        height: 100%; 
-        z-index: 1000; 
-        box-shadow: 20px 0 50px rgba(0,0,0,0.5); 
-        margin: 0; 
-        transition: left 0.3s ease;
+    .sidebar {
+        position: fixed;
+        left: -260px; /* Hide off-screen */
+        height: 100%;
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
     }
-    .sidebar.active { left: 0; }
-    .sidebar.collapsed { left: -260px; }
+    /* When active, slide in */
+    .sidebar.active {
+        left: 0;
+    }
+    .sidebar.collapsed {
+        left: -260px;
+    }
 }
 
-/* Ensure Logo sizing */
 .nav-logo-only {
     height: 32px;
     width: auto;
-    object-fit: contain;
 }
