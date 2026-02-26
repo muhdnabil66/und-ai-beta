@@ -5,19 +5,18 @@ const userInput = document.getElementById('userInput');
 const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
 
-// Setup Chat Inner
 let chatStreamInner = document.createElement('div');
 chatStreamInner.className = 'chat-stream-inner';
 if (chatBox) { chatBox.appendChild(chatStreamInner); }
 
 // --- CHAT LOGIC (OPENROUTER) ---
 async function askAI(prompt) {
-    // DO NOT TOUCH THESE STRINGS. 
-    // The GitHub Action will replace these placeholders automatically.
+    // LEAVE THESE PLACEHOLDERS EXACTLY AS THEY ARE.
+    // The GitHub Action will swap them for real keys ONLY on the live site.
     const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
-        throw new Error("API Key not injected. Check GitHub Actions.");
+        throw new Error("API Key was not injected. Please wait for GitHub Actions to finish.");
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -43,11 +42,10 @@ async function askAI(prompt) {
 
 // --- IMAGE LOGIC (HUGGING FACE) ---
 async function generateImage(prompt) {
-    // The GitHub Action will replace this placeholder automatically.
     const hfToken = "INSERT_HF_TOKEN_HERE"; 
 
     if (hfToken.includes("INSERT_HF")) {
-        throw new Error("HF Token not injected. Check GitHub Actions.");
+        throw new Error("HF Token not injected.");
     }
 
     const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
@@ -103,7 +101,6 @@ async function handleAction(type) {
     }
 }
 
-// --- LISTENERS ---
 document.getElementById('sendBtn')?.addEventListener('click', () => handleAction('chat'));
 document.getElementById('imgGenBtn')?.addEventListener('click', () => handleAction('image'));
 
