@@ -1,23 +1,22 @@
-name: Deploy to GitHub Pages
+name: Deploy Fresh Site
 on:
   push:
-    branches: [main]
+    branches: [ main ] # Runs every time you push changes from your Notepad
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Inject Secrets
-        env:
-          G_KEY: ${{ secrets.GEMINI_KEY }}
-          H_TOKEN: ${{ secrets.HF_TOKEN }}
+
+      - name: Inject API Key
         run: |
-          # This swaps placeholders for real keys only during deployment
-          sed -i "s|INSERT_OPENROUTER_KEY_HERE|$G_KEY|g" script.js
-          sed -i "s|INSERT_HF_TOKEN_HERE|$H_TOKEN|g" script.js
-      - name: Deploy to GitHub Pages
+          # This replaces the placeholder in your script.js with the Secret key
+          sed -i "s/INSERT_OPENROUTER_KEY_HERE/${{ secrets.OPENROUTER_KEY }}/g" script.js
+
+      - name: Deploy to GH Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .
-          branch: gh-pages
+          folder: . # Deploys your root folder
+          branch: gh-pages # This creates the "Fresh" branch for you
