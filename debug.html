@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UND AI - API Debugger</title>
+    <style>
+        body { font-family: monospace; background: #0d1117; color: #00ff00; padding: 20px; }
+        .panel { border: 1px solid #30363d; padding: 20px; border-radius: 8px; background: #161b22; }
+        input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; width: 300px; }
+        button { background: #238636; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+        .error { color: #ff6b6b; }
+        .success { color: #4ade80; }
+        #log { margin-top: 20px; white-space: pre-wrap; border-top: 1px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>UND AI System Diagnostic</h2>
+        <input type="text" id="debugKey" placeholder="Paste Gemini API Key Here">
+        <button onclick="runDiagnostic()">Run System Test</button>
+        <div id="log">Waiting for input...</div>
+    </div>
+
+    <script>
+        async function runDiagnostic() {
+            const key = document.getElementById('debugKey').value.trim();
+            const log = document.getElementById('log');
+            log.innerHTML = "Starting connection to Google Services...\n";
+
+            if (!key) { log.innerHTML += "ERROR: No key provided."; return; }
+
+            try {
+                // TEST 1: Model Availability
+                log.innerHTML += "Testing Model Connectivity (v1)... ";
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash?key=${key}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    log.innerHTML += `<span class="error">FAILED</span>\n`;
+                    log.innerHTML += `Reason: ${data.error.message}\n`;
+                    log.innerHTML += `Code: ${data.error.status}\n`;
+                    
+                    if(data.error.status === "PERMISSION_DENIED") {
+                        log.innerHTML += "\n[ACTION REQUIRED]: Go to Google AI Studio. Your key is likely restricted by IP or Referrer.";
+                    }
+                } else {
+                    log.innerHTML += `<span class="success">PASSED</span>\n`;
+                    log.innerHTML += `Model Name: ${data.name}\n`;
+                    log.innerHTML += `Status: Model is ready for generation.\n\n`;
+
+                    // TEST 2: Hello World Prompt
+                    log.innerHTML += "Testing Content Generation... ";
+                    const genRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: "Respond with the word 'READY'" }] }] })
+                    });
+                    const genData = await genRes.json();
+                    
+                    if (genData.candidates) {
+                        log.innerHTML += `<span class="success">PASSED</span>\n`;
+                        log.innerHTML += `Response: ${genData.candidates[0].content.parts[0].text}\n`;
+                        log.innerHTML += `\n--- DIAGNOSTIC COMPLETE: YOUR KEY IS WORKING ---`;
+                    } else {
+                        log.innerHTML += `<span class="error">FAILED</span>\n`;
+                        log.innerHTML += JSON.stringify(genData, null, 2);
+                    }
+                }
+            } catch (e) {
+                log.innerHTML += `<span class="error">CRITICAL ERROR</span>\n${e.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
