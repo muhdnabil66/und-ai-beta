@@ -40,7 +40,6 @@
         </div>
         <div class="nav-center">
             <img src="undai.png" alt="UND AI" class="nav-logo-only" onerror="this.style.display='none';">
-            <span id="alt-logo-text" style="font-weight:600; letter-spacing:1px;">UND AI</span>
         </div>
         <div class="nav-right">
             <button id="themeToggle" class="icon-btn" title="Toggle Theme">
@@ -77,13 +76,21 @@
                 <div id="emptyState" class="empty-state">
                     <h1>How can I help you today?</h1>
                     <div class="suggestions">
-                        <button class="suggestion-card" onclick="fillInput('Explain Quantum Physics simply')">
+                        <button class="suggestion-card" onclick="autoAsk('Explain Quantum Physics simply')">
                             <i data-lucide="atom"></i>
                             <div class="sugg-text"><span>Quantum Physics</span><small>Simple terms</small></div>
                         </button>
-                        <button class="suggestion-card" onclick="fillInput('Design a futuristic sneaker')">
+                        <button class="suggestion-card" onclick="autoAsk('Design a futuristic sneaker')">
                             <i data-lucide="pen-tool"></i>
                             <div class="sugg-text"><span>Design Idea</span><small>Futuristic sneaker</small></div>
+                        </button>
+                        <button class="suggestion-card" onclick="autoAsk('Write a poem about neon lights')">
+                            <i data-lucide="feather"></i>
+                            <div class="sugg-text"><span>Creative Writing</span><small>Neon poetry</small></div>
+                        </button>
+                        <button class="suggestion-card" onclick="autoAsk('Plan a 3-day trip to Tokyo')">
+                            <i data-lucide="map"></i>
+                            <div class="sugg-text"><span>Travel Plan</span><small>Trip to Tokyo</small></div>
                         </button>
                     </div>
                 </div>

@@ -1,28 +1,22 @@
-// 1. IMMEDIATE LOADING FIX: Force hide welcome screen after 2 seconds
+// 1. LOADING OVERLAY
 window.addEventListener('load', () => {
     setTimeout(() => {
         const welcome = document.getElementById('welcomeScreen');
-        if (welcome) {
-            welcome.classList.add('hidden');
-            console.log("Welcome screen hidden");
-        }
-    }, 2000); // Matches your index.html timing
+        if (welcome) welcome.classList.add('hidden');
+    }, 2000);
 });
 
-// 2. INITIALIZE ICONS
 if (window.lucide) { lucide.createIcons(); }
 
-// 3. SELECT ELEMENTS
-const body = document.body;
-const themeToggle = document.getElementById('themeToggle');
-const menuBtn = document.getElementById('menuBtn');
+// 2. ELEMENT SELECTION
 const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
 const userInput = document.getElementById('userInput');
 const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
 const modal = document.getElementById('customModal');
 
-// Create a container for messages if it doesn't exist
+// Ensure a container for chat messages exists
 let chatStreamInner = document.querySelector('.chat-stream-inner');
 if (!chatStreamInner && chatBox) {
     chatStreamInner = document.createElement('div');
@@ -30,17 +24,30 @@ if (!chatStreamInner && chatBox) {
     chatBox.appendChild(chatStreamInner);
 }
 
-// 4. THEME & SIDEBAR TOGGLES
-themeToggle?.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    body.classList.toggle('light-mode'); // Supports light-mode CSS variables
+// 3. THEME & MOBILE SIDEBAR FIX
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    document.body.classList.toggle('light-mode');
 });
 
-menuBtn?.addEventListener('click', () => {
-    sidebar?.classList.toggle('collapsed'); // Controls width/visibility
+menuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Desktop toggle
+    sidebar?.classList.toggle('collapsed');
+    // Mobile toggle
+    sidebar?.classList.toggle('active');
 });
 
-// 5. POPUP SYSTEM
+// Close mobile sidebar when clicking outside
+document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 && sidebar?.classList.contains('active')) {
+        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    }
+});
+
+// 4. POPUP SYSTEM
 function showPopup(title, message, onConfirm = null) {
     if (!modal) return;
     document.getElementById('modalTitle').innerText = title;
@@ -56,9 +63,9 @@ function showPopup(title, message, onConfirm = null) {
     };
 }
 
-// 6. CHAT & IMAGE LOGIC
+// 5. CHAT & API LOGIC
 async function askAI(prompt) {
-    const apiKey = "INSERT_OPENROUTER_KEY_HERE"; // Swapped by GitHub Action
+    const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
     
     if (apiKey.includes("INSERT_OPENROUTER")) {
         throw new Error("Security Error: API Key missing. Please check deployment settings.");
@@ -76,25 +83,12 @@ async function askAI(prompt) {
         })
     });
 
+    if (!response.ok) throw new Error("API request failed.");
     const data = await response.json();
     return data.choices[0].message.content;
 }
 
-// Placeholder Image Logic (Hugging Face)
-async function generateImage(prompt) {
-    const hfToken = "INSERT_HF_TOKEN_HERE"; 
-    if (hfToken.includes("INSERT_HF")) throw new Error("Image API Key missing.");
-
-    const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-        headers: { "Authorization": `Bearer ${hfToken}` },
-        method: "POST",
-        body: JSON.stringify({ inputs: prompt })
-    });
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-}
-
-// 7. MESSAGE RENDERING
+// 6. MESSAGE HANDLING
 function appendMessage(role, content) {
     if (emptyState) emptyState.style.display = 'none';
     const msg = document.createElement('div');
@@ -105,50 +99,66 @@ function appendMessage(role, content) {
     return msg;
 }
 
-// 8. ACTION HANDLERS
-async function handleAction(type) {
+async function handleChat() {
     const text = userInput.value.trim();
     if (!text) return;
 
     userInput.value = '';
     appendMessage('user', text);
-    const thinking = appendMessage('ai', type === 'chat' ? 'Thinking...' : 'Generating image...');
+    const thinking = appendMessage('ai', 'Thinking...');
 
     try {
-        if (type === 'chat') {
-            const aiRes = await askAI(text);
-            thinking.remove();
-            appendMessage('ai', aiRes);
-        } else {
-            const imgUrl = await generateImage(text);
-            thinking.remove();
-            appendMessage('ai', `<img src="${imgUrl}" style="width:100%; border-radius:12px;">`);
-        }
+        const aiRes = await askAI(text);
+        thinking.remove();
+        appendMessage('ai', aiRes);
     } catch (e) {
         thinking.innerHTML = `<div style="color:red;">Error: ${e.message}</div>`;
     }
 }
 
-// 9. EVENT LISTENERS
-document.getElementById('sendBtn')?.addEventListener('click', () => handleAction('chat'));
-document.getElementById('imgGenBtn')?.addEventListener('click', () => handleAction('image'));
+// Auto-ask function for suggestions
+function autoAsk(text) {
+    userInput.value = text;
+    handleChat();
+}
+
+// 7. BUTTON EVENT LISTENERS
+document.getElementById('sendBtn')?.addEventListener('click', handleChat);
+
+document.getElementById('newChatBtn')?.addEventListener('click', () => location.reload());
+
+document.getElementById('clearHistoryBtn')?.addEventListener('click', () => {
+    showPopup('Clear History', 'Are you sure you want to delete this chat?', () => {
+        chatStreamInner.innerHTML = '';
+        location.reload();
+    });
+});
 
 document.getElementById('settingsBtn')?.addEventListener('click', () => {
-    showPopup('Settings', 'Settings menu will be updated in the future.');
+    showPopup('Settings', 'Settings menu will be updated in a future version.');
+});
+
+document.getElementById('contactBtn')?.addEventListener('click', () => {
+    window.location.href = 'contact.html';
+});
+
+// Toolbar actions
+document.getElementById('imgGenBtn')?.addEventListener('click', () => {
+    showPopup('Image Generator', 'Image generation is being optimized for this project.');
 });
 
 document.getElementById('voiceBtn')?.addEventListener('click', () => {
-    showPopup('Voice', 'Voice feature will be updated in the future.');
+    showPopup('Voice Input', 'Voice recognition will be available in the next update.');
 });
 
-// Sidebar functionality
-function newChat() { location.reload(); }
-function clearChat() { 
-    chatStreamInner.innerHTML = '';
-    location.reload();
-}
+document.getElementById('attachBtn')?.addEventListener('click', () => {
+    showPopup('Attach File', 'File analysis features will be updated in the future.');
+});
 
-// Suggestions helper
-function fillInput(text) {
-    if (userInput) userInput.value = text;
-}
+// Input handling
+userInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleChat();
+    }
+});
