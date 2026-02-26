@@ -12,7 +12,7 @@
 
     <div id="welcomeScreen" class="welcome-overlay">
         <div class="welcome-center-box">
-            <img src="undai.png" alt="UND AI Logo" class="welcome-logo-large" onerror="this.src='https://placehold.co/100x100?text=UND+AI'">
+            <img src="undai.png" alt="UND AI Logo" class="welcome-logo-large">
             <h1 class="welcome-text">UND AI</h1>
             <div class="welcome-glow"></div>
         </div>
@@ -39,7 +39,7 @@
             </button>
         </div>
         <div class="nav-center">
-            <img src="undai.png" alt="UND AI" class="nav-logo-only" onerror="this.style.display='none';">
+            <img src="undai.png" alt="UND AI" class="nav-logo-only">
         </div>
         <div class="nav-right">
             <button id="themeToggle" class="icon-btn" title="Toggle Theme">
@@ -78,19 +78,15 @@
                     <div class="suggestions">
                         <button class="suggestion-card" onclick="autoAsk('Explain Quantum Physics simply')">
                             <i data-lucide="atom"></i>
-                            <div class="sugg-text"><span>Quantum Physics</span><small>Simple terms</small></div>
+                            <div class="sugg-text"><span>Quantum Physics</span><small>Auto-generate</small></div>
                         </button>
                         <button class="suggestion-card" onclick="autoAsk('Design a futuristic sneaker')">
                             <i data-lucide="pen-tool"></i>
-                            <div class="sugg-text"><span>Design Idea</span><small>Futuristic sneaker</small></div>
+                            <div class="sugg-text"><span>Design Idea</span><small>Auto-generate</small></div>
                         </button>
-                        <button class="suggestion-card" onclick="autoAsk('Write a poem about neon lights')">
-                            <i data-lucide="feather"></i>
-                            <div class="sugg-text"><span>Creative Writing</span><small>Neon poetry</small></div>
-                        </button>
-                        <button class="suggestion-card" onclick="autoAsk('Plan a 3-day trip to Tokyo')">
+                        <button class="suggestion-card" onclick="autoAsk('Plan a trip to Japan')">
                             <i data-lucide="map"></i>
-                            <div class="sugg-text"><span>Travel Plan</span><small>Trip to Tokyo</small></div>
+                            <div class="sugg-text"><span>Travel Guide</span><small>Auto-generate</small></div>
                         </button>
                     </div>
                 </div>
