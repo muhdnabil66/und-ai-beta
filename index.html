@@ -3,114 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UND AI</title>
+    <title>UND AI | Intelligence</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body class="dark-mode">
-
     <div id="welcomeScreen" class="welcome-overlay">
         <div class="welcome-center-box">
-            <img src="undai.png" alt="UND AI Logo" class="welcome-logo-large">
+            <img src="undai.png" alt="Logo" class="welcome-logo-large">
             <h1 class="welcome-text">UND AI</h1>
-            <div class="welcome-glow"></div>
-        </div>
-    </div>
-
-    <div id="customModal" class="modal-overlay hidden">
-        <div class="modal-card">
-            <div class="modal-header">
-                <i data-lucide="info" class="modal-icon"></i>
-                <h3 id="modalTitle">Notice</h3>
-            </div>
-            <p id="modalMessage"></p>
-            <div class="modal-actions">
-                <button id="modalClose" class="btn-secondary">Close</button>
-                <button id="modalConfirm" class="btn-primary">Acknowledge</button>
-            </div>
         </div>
     </div>
 
     <nav class="glass-header">
-        <div class="nav-left">
-            <button id="menuBtn" class="icon-btn" title="Toggle Sidebar">
-                <i data-lucide="menu"></i>
-            </button>
-        </div>
-        <div class="nav-center">
-            <img src="undai.png" alt="UND AI" class="nav-logo-only">
-        </div>
-        <div class="nav-right">
-            <button id="themeToggle" class="icon-btn" title="Toggle Theme">
-                <i data-lucide="moon" class="moon-icon"></i>
-                <i data-lucide="sun" class="sun-icon"></i>
-            </button>
-        </div>
+        <button id="menuBtn" class="icon-btn"><i data-lucide="menu"></i></button>
+        <div class="nav-center"><img src="undai.png" alt="UND AI" class="nav-logo-only"></div>
+        <button id="themeToggle" class="icon-btn"><i data-lucide="moon"></i></button>
     </nav>
 
     <div class="app-container">
         <aside id="sidebar" class="sidebar">
-            <button class="new-chat-btn" id="newChatBtn">
-                <i data-lucide="plus"></i> <span>New Chat</span>
-            </button>
-            <div class="sidebar-history">
-                <p class="history-label">Today</p>
-                <div id="historyList"></div>
-            </div>
+            <button class="new-chat-btn" onclick="location.reload()"><i data-lucide="plus"></i> <span>New Chat</span></button>
+            <div id="historyList" style="flex:1;"></div>
             <div class="sidebar-footer">
-                <button class="footer-item" id="contactBtn">
-                    <i data-lucide="mail"></i> <span>Contact Us</span>
-                </button>
-                <button class="footer-item" id="clearHistoryBtn">
-                    <i data-lucide="trash-2"></i> <span>Clear History</span>
-                </button>
-                <button class="footer-item" id="settingsBtn">
-                    <i data-lucide="settings"></i> <span>Settings</span>
-                </button>
+                <button class="footer-item" id="settingsBtn"><i data-lucide="settings"></i> <span>Settings</span></button>
+                <button class="footer-item" id="clearHistoryBtn"><i data-lucide="trash-2"></i> <span>Clear</span></button>
             </div>
         </aside>
 
         <main class="chat-viewport">
-            <div id="chatBox" class="chat-stream">
-                <div id="emptyState" class="empty-state">
-                    <h1>How can I help you today?</h1>
-                    <div class="suggestions">
-                        <button class="suggestion-card" onclick="autoAsk('Explain Quantum Physics simply')">
-                            <i data-lucide="atom"></i>
-                            <div class="sugg-text"><span>Quantum Physics</span><small>Auto-generate</small></div>
-                        </button>
-                        <button class="suggestion-card" onclick="autoAsk('Design a futuristic sneaker')">
-                            <i data-lucide="pen-tool"></i>
-                            <div class="sugg-text"><span>Design Idea</span><small>Auto-generate</small></div>
-                        </button>
-                        <button class="suggestion-card" onclick="autoAsk('Plan a trip to Japan')">
-                            <i data-lucide="map"></i>
-                            <div class="sugg-text"><span>Travel Guide</span><small>Auto-generate</small></div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
+            <div id="chatBox" class="chat-stream"></div>
             <div class="input-area">
-                <div class="input-wrapper">
-                    <div class="input-container">
-                        <textarea id="userInput" placeholder="Message UND AI..." rows="1"></textarea>
-                        <div class="toolbar">
-                            <div class="toolbar-left">
-                                <button id="attachBtn" class="tool-btn" title="Attach File"><i data-lucide="paperclip"></i></button>
-                                <button id="voiceBtn" class="tool-btn" title="Voice Input"><i data-lucide="mic"></i></button>
-                                <button id="imgGenBtn" class="tool-btn" title="Generate Image"><i data-lucide="image"></i></button>
-                            </div>
-                            <button id="sendBtn" class="send-btn" title="Send Message"><i data-lucide="arrow-up"></i></button>
-                        </div>
-                    </div>
+                <div class="input-container">
+                    <textarea id="userInput" placeholder="Message UND AI..." rows="1"></textarea>
+                    <button id="sendBtn" class="send-btn"><i data-lucide="arrow-up"></i></button>
                 </div>
-                <p class="disclaimer">UND AI may display inaccurate info. Double-check its responses.</p>
             </div>
         </main>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
