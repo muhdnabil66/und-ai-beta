@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Config File from Secrets
-        # Using environment variables prevents shell-injection or character escaping issues
+        # This part ensures special characters in your keys don't break the script
         env:
           G_KEY: ${{ secrets.GEMINI_KEY }}
           H_TOKEN: ${{ secrets.HF_TOKEN }}
