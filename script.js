@@ -12,8 +12,13 @@ if (chatBox) { chatBox.appendChild(chatStreamInner); }
 
 // --- CHAT LOGIC (OPENROUTER) ---
 async function askAI(prompt) {
-    const apiKey = window.CONFIG?.GEMINI_KEY; // This now holds your OpenRouter Key
-    if (!apiKey || apiKey.includes('actual_key')) throw new Error("API Key not found");
+    // DO NOT TOUCH THESE STRINGS. 
+    // The GitHub Action will replace these placeholders automatically.
+    const apiKey = "INSERT_OPENROUTER_KEY_HERE"; 
+    
+    if (apiKey.includes("INSERT_OPENROUTER")) {
+        throw new Error("API Key not injected. Check GitHub Actions.");
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -22,7 +27,7 @@ async function askAI(prompt) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            "model": "google/gemini-2.0-flash-exp:free", // Best free model on OpenRouter
+            "model": "google/gemini-2.0-flash-exp:free",
             "messages": [{ "role": "user", "content": prompt }]
         })
     });
@@ -38,8 +43,12 @@ async function askAI(prompt) {
 
 // --- IMAGE LOGIC (HUGGING FACE) ---
 async function generateImage(prompt) {
-    const hfToken = window.CONFIG?.HF_TOKEN; 
-    if (!hfToken || hfToken.includes('actual_key')) throw new Error("Hugging Face Token not found");
+    // The GitHub Action will replace this placeholder automatically.
+    const hfToken = "INSERT_HF_TOKEN_HERE"; 
+
+    if (hfToken.includes("INSERT_HF")) {
+        throw new Error("HF Token not injected. Check GitHub Actions.");
+    }
 
     const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
         headers: { "Authorization": `Bearer ${hfToken}` },
@@ -72,7 +81,6 @@ async function handleAction(type) {
     userInput.value = '';
     appendMessage('user', text);
     
-    // UI feedback based on button clicked
     const statusMsg = type === 'chat' ? 'Thinking...' : 'Generating image...';
     const thinking = appendMessage('ai', statusMsg);
 
@@ -82,7 +90,6 @@ async function handleAction(type) {
             thinking.remove();
             appendMessage('ai', aiRes);
         } else {
-            // Image Generation Logic
             const imgUrl = await generateImage(text);
             thinking.remove();
             const imgHTML = `<div class="img-result">
@@ -96,8 +103,7 @@ async function handleAction(type) {
     }
 }
 
-// --- BUTTON LISTENERS ---
-// Make sure these IDs match your buttons in index.html
+// --- LISTENERS ---
 document.getElementById('sendBtn')?.addEventListener('click', () => handleAction('chat'));
 document.getElementById('imgGenBtn')?.addEventListener('click', () => handleAction('image'));
 
@@ -108,11 +114,9 @@ userInput?.addEventListener('keydown', (e) => {
     }
 });
 
-// Sidebar & Theme logic
 document.getElementById('themeToggle')?.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
 document.getElementById('menuBtn')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
 
-// Auto-hide welcome screen
 window.addEventListener('load', () => {
     setTimeout(() => document.getElementById('welcomeScreen')?.classList.add('hidden'), 2000);
 });
