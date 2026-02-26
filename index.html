@@ -26,7 +26,7 @@
             </div>
             <p id="modalMessage"></p>
             <div class="modal-actions">
-                <button id="modalClose" class="btn-secondary hidden">Cancel</button>
+                <button id="modalClose" class="btn-secondary">Close</button>
                 <button id="modalConfirm" class="btn-primary">Acknowledge</button>
             </div>
         </div>
@@ -39,11 +39,11 @@
             </button>
         </div>
         <div class="nav-center">
-            <img src="undai.png" alt="UND AI" class="nav-logo-only" onerror="this.style.display='none'; document.getElementById('alt-logo-text').style.display='block';">
-            <span id="alt-logo-text" style="display:none; font-weight:600; letter-spacing:1px;">UND AI</span>
+            <img src="undai.png" alt="UND AI" class="nav-logo-only" onerror="this.style.display='none';">
+            <span id="alt-logo-text" style="font-weight:600; letter-spacing:1px;">UND AI</span>
         </div>
         <div class="nav-right">
-            <button id="themeToggle" class="icon-btn theme-switch" title="Toggle Theme">
+            <button id="themeToggle" class="icon-btn" title="Toggle Theme">
                 <i data-lucide="moon" class="moon-icon"></i>
                 <i data-lucide="sun" class="sun-icon"></i>
             </button>
@@ -52,19 +52,21 @@
 
     <div class="app-container">
         <aside id="sidebar" class="sidebar">
-            <button class="new-chat-btn" onclick="newChat()">
+            <button class="new-chat-btn" id="newChatBtn">
                 <i data-lucide="plus"></i> <span>New Chat</span>
             </button>
             <div class="sidebar-history">
                 <p class="history-label">Today</p>
-                <div id="historyList">
-                    </div>
+                <div id="historyList"></div>
             </div>
             <div class="sidebar-footer">
-                <button class="footer-item" onclick="showPopup('Clear Chat', 'Are you sure you want to clear your conversation history?', clearChat, true)">
+                <button class="footer-item" id="contactBtn">
+                    <i data-lucide="mail"></i> <span>Contact Us</span>
+                </button>
+                <button class="footer-item" id="clearHistoryBtn">
                     <i data-lucide="trash-2"></i> <span>Clear History</span>
                 </button>
-                <button class="footer-item" onclick="showPopup('Settings', 'Settings menu is coming in a future update.', null, false)">
+                <button class="footer-item" id="settingsBtn">
                     <i data-lucide="settings"></i> <span>Settings</span>
                 </button>
             </div>
@@ -73,31 +75,15 @@
         <main class="chat-viewport">
             <div id="chatBox" class="chat-stream">
                 <div id="emptyState" class="empty-state">
-                    <div class="empty-logo-wrapper">
-                        <img src="undai.png" class="bg-logo-fade" onerror="this.style.display='none'">
-                    </div>
                     <h1>How can I help you today?</h1>
                     <div class="suggestions">
                         <button class="suggestion-card" onclick="fillInput('Explain Quantum Physics simply')">
                             <i data-lucide="atom"></i>
-                            <div class="sugg-text">
-                                <span>Explain Quantum Physics</span>
-                                <small>in simple terms</small>
-                            </div>
+                            <div class="sugg-text"><span>Quantum Physics</span><small>Simple terms</small></div>
                         </button>
                         <button class="suggestion-card" onclick="fillInput('Design a futuristic sneaker')">
                             <i data-lucide="pen-tool"></i>
-                            <div class="sugg-text">
-                                <span>Design Idea</span>
-                                <small>Futuristic sneaker</small>
-                            </div>
-                        </button>
-                        <button class="suggestion-card" onclick="fillInput('Write a polite email declining an invitation')">
-                            <i data-lucide="mail"></i>
-                            <div class="sugg-text">
-                                <span>Draft an email</span>
-                                <small>Declining an invitation</small>
-                            </div>
+                            <div class="sugg-text"><span>Design Idea</span><small>Futuristic sneaker</small></div>
                         </button>
                     </div>
                 </div>
@@ -109,6 +95,7 @@
                         <textarea id="userInput" placeholder="Message UND AI..." rows="1"></textarea>
                         <div class="toolbar">
                             <div class="toolbar-left">
+                                <button id="attachBtn" class="tool-btn" title="Attach File"><i data-lucide="paperclip"></i></button>
                                 <button id="voiceBtn" class="tool-btn" title="Voice Input"><i data-lucide="mic"></i></button>
                                 <button id="imgGenBtn" class="tool-btn" title="Generate Image"><i data-lucide="image"></i></button>
                             </div>
@@ -116,14 +103,11 @@
                         </div>
                     </div>
                 </div>
-                <p class="disclaimer">
-                    UND AI may display inaccurate info, including about people, so double-check its responses. 
-                </p>
+                <p class="disclaimer">UND AI may display inaccurate info. Double-check its responses.</p>
             </div>
         </main>
     </div>
 
-    
     <script src="script.js"></script>
 </body>
 </html>
